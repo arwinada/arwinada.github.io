@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Ada Test</title>
+
+    <script
+      async
+      id="__ada"
+      data-handle="arwingen"
+      src="https://static.ada.support/embed2.js"
+    ></script>
+
+    <script type="text/javascript">
+      window.adaEmbed.subscribeEvent("ada:csat_submitted", (data) => {
+        console.log("CSAT Submitted:", data)
+      })
+    </script>
+  </head>
+
+  <body>
+    <h1>Welcome!</h1>
+    <p style="width: 500px">
+      Getting started with Ada is easy. Follow along in the HTML
+      comments to learn about the available customization options for your bot.
+    </p>
+
+    <div id="customIframe" style="height: 300px; width: 500px"></div>
+  </body>
+</html>
