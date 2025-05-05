@@ -12,7 +12,7 @@ form.addEventListener('submit', async (e) => {
   input.value = '';
 
   // Send POST to backend
-  const response = await fetch('https://2004-2a09-bac5-1709-123-00-1d-d9.ngrok-free.app', {
+  const response = await fetch('https://2004-2a09-bac5-1709-123-00-1d-d9.ngrok-free.app/send', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
