@@ -2,17 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Chat Mockup</title>
+  <title>Ada Chat Demo</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="chat-container">
-    <div id="chat-box"></div>
-    <form id="chat-form">
-      <input type="text" id="chat-input" placeholder="Type a message..." required />
-      <button type="submit">Send</button>
-    </form>
-  </div>
+  <div class="chat-box" id="chat-box"></div>
+  <input type="text" id="user-input" placeholder="Type a message..." />
+  <button onclick="sendMessage()">Send</button>
   <script src="script.js"></script>
 </body>
 </html>

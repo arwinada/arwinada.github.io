@@ -1,37 +1,65 @@
-const form = document.getElementById('chat-form');
-const input = document.getElementById('chat-input');
-const chatBox = document.getElementById('chat-box');
+const API_BASE = 'https://{{subdomain}}.ada.support/api/v2';
+const TOKEN = '{{token}}';
+const CHANNEL_ID = '{{channel-id}}';
 
-form.addEventListener('submit', async (e) => {
- e.preventDefault();
- const text = input.value.trim();
- if (!text) return;
+let conversationId = null;
+let endUserId = null;
 
- // Display user message
- appendMessage("You", text);
- input.value = '';
+async function sendMessage() {
+  const input = document.getElementById("user-input");
+  const message = input.value.trim();
+  if (!message) return;
 
- // Send POST to backend
- const response = await fetch('esponse = await fetch('https://2004-2a09-bac5-1709-123-00-1d-d9.ngrok-free.app/send', {
-   method: 'POST',
-   headers: {
-     'Content-Type': 'application/json'
-   },
-   body: JSON.stringify({ message: text })
- });
+  appendMessage("You", message);
+  input.value = "";
 
- // Simulated webhook listener
- // Normally this would be async, via polling, SSE or WebSocket.
- setTimeout(() => {
-   // Simulate webhook calling back with response
-   const fakeResponse = `Echo: ${text}`;
-   appendMessage("Bot", fakeResponse);
- }, 1500);
-});
+  if (!conversationId) {
+    const convoRes = await fetch(`${API_BASE}/conversations`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        channel_id: CHANNEL_ID,
+        metadata: {
+          pass: "example_string_value",
+          initial_url: "https://example.com",
+          locale: "en-CA"
+        }
+      })
+    });
+    const convoData = await convoRes.json();
+    conversationId = convoData.id;
+    endUserId = convoData.participants.find(p => p.role === "end_user")?.id;
+  }
 
-function appendMessage(sender, message) {
- const msg = document.createElement('div');
- msg.textContent = `${sender}: ${message}`;
- chatBox.appendChild(msg);
- chatBox.scrollTop = chatBox.scrollHeight;
+  await fetch(`${API_BASE}/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      author: {
+        id: endUserId,
+        role: "end_user",
+        avatar: "https://www.gravatar.com",
+        display_name: "Ada Lovelace"
+      },
+      content: {
+        body: message,
+        type: "text"
+      }
+    })
+  });
+}
+
+function appendMessage(sender, text) {
+  const chatBox = document.getElementById("chat-box");
+  const div = document.createElement("div");
+  div.classList.add("message");
+  div.innerText = `${sender}: ${text}`;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
