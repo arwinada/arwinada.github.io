@@ -1,5 +1,5 @@
 const API_BASE = 'https://arwingen.ada.support/api/v2';
-const TOKEN = 'd5a3d6166ec6f932cff66639d7ad4ce7';
+const TOKEN = {TOKEN};
 const CHANNEL_ID = '680a4ebcbfc43b65c8d6a1f2';
 
 let conversationId = null;
