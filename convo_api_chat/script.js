@@ -1,10 +1,18 @@
-const PROXY_URL = 'https://641a-2a09-bac5-1709-1ed2-00-312-15.ngrok-free.app/send';
+let PROXY_URL = ''; // will be built at runtime
 const CHANNEL_ID = '680a4ebcbfc43b65c8d6a1f2';
 
 let conversationId = null;
 let endUserId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Prompt for ngrok subdomain
+  const subdomain = prompt("Enter your ngrok subdomain (e.g. 'arwinbot'):");
+  if (!subdomain) {
+    alert("A subdomain is required to connect to the backend.");
+    return;
+  }
+  PROXY_URL = `https://${subdomain}.ngrok-free.app/send`;
+
   const form = document.getElementById("chat-form");
   form.addEventListener("submit", (e) => {
     e.preventDefault();
