@@ -1,4 +1,4 @@
-const PROXY_URL = 'https://your-ngrok-url.ngrok-free.app/send';
+const PROXY_URL = 'https://0c68-2a09-bac5-1709-1ed2-00-312-15.ngrok-free.app/send';
 const CHANNEL_ID = '680a4ebcbfc43b65c8d6a1f2';
 
 let conversationId = null;
