@@ -5,7 +5,7 @@
   <title>Ada Chat Demo</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body onload="promptForToken()">
   <div class="chat-box" id="chat-box"></div>
   <input type="text" id="user-input" placeholder="Type a message..." />
   <button onclick="sendMessage()">Send</button>

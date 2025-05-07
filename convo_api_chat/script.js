@@ -1,9 +1,16 @@
 const API_BASE = 'https://arwingen.ada.support/api/v2';
-const TOKEN = {TOKEN};
 const CHANNEL_ID = '680a4ebcbfc43b65c8d6a1f2';
 
 let conversationId = null;
 let endUserId = null;
+let TOKEN = null;
+
+function promptForToken() {
+  TOKEN = prompt("Please enter your API token:");
+  if (!TOKEN) {
+    alert("An API token is required to use the chat.");
+  }
+}
 
 async function sendMessage() {
   const input = document.getElementById("user-input");
