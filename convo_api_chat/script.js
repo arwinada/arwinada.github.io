@@ -52,8 +52,8 @@ async function sendMessage() {
       es = new EventSource(eventsUrl);
 
       es.onmessage = (e) => {
-        const { content } = JSON.parse(e.data);   // author available too
-        appendMessage("Bot", content.body);
+        const payload = JSON.parse(e.data);
+        appendMessage("Bot", payload.content.body);
       };
 
       es.onerror = (err) => console.error("SSE error:", err);
