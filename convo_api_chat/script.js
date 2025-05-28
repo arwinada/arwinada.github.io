@@ -50,12 +50,15 @@ async function sendMessage() {
     if (!es) {
       es = new EventSource(`${BACKEND_BASE}/events/${conversationId}`);
 
+      es.onopen = () => console.log("SSE connected →", url);
+
       es.onmessage = (e) => {
         const payload = JSON.parse(e.data);          // { author, content }
         appendMessage("Bot", payload.content.body);  // show the reply text
       };
 
       es.onerror = (err) => console.error("SSE error:", err);
+      appendMessage("System", "⚠️ Lost connection to server stream.");
     }
   } catch (err) {
     console.error("Proxy error:", err);
