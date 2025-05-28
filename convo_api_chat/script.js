@@ -3,6 +3,7 @@ const CHANNEL_ID = '680a4ebcbfc43b65c8d6a1f2';
 
 let conversationId = null;
 let endUserId = null;
+let es = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Prompt for ngrok subdomain
@@ -16,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("chat-form");
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    sendMessage();
+    sendMessage(subdomain);
   });
 });
 
@@ -46,8 +47,17 @@ async function sendMessage() {
     conversationId = data.conversation_id;
     endUserId = data.end_user_id;
 
-    appendMessage("Bot", data.reply);
+    if (!es) {
+      const eventsUrl = `https://${subdomain}.ngrok-free.app/events/${conversationId}`;
+      es = new EventSource(eventsUrl);
 
+      es.onmessage = (e) => {
+        const { content } = JSON.parse(e.data);   // author available too
+        appendMessage("Bot", content.body);
+      };
+
+      es.onerror = (err) => console.error("SSE error:", err);
+    }
   } catch (err) {
     console.error("Proxy error:", err);
     appendMessage("System", "❌ Message failed to send.");
