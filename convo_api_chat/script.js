@@ -1,23 +1,23 @@
 let PROXY_URL = ''; // will be built at runtime
 const CHANNEL_ID = '680a4ebcbfc43b65c8d6a1f2';
 
+let BACKEND_BASE = "";
 let conversationId = null;
 let endUserId = null;
 let es = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Prompt for ngrok subdomain
   const subdomain = prompt("Enter your ngrok subdomain (e.g. 'arwinbot'):");
   if (!subdomain) {
     alert("A subdomain is required to connect to the backend.");
     return;
   }
-  PROXY_URL = `https://${subdomain}.ngrok-free.app/send`;
+  BACKEND_BASE = `https://${subdomain}.ngrok-free.app`;
 
   const form = document.getElementById("chat-form");
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    sendMessage(subdomain);
+    sendMessage();
   });
 });
 
@@ -30,15 +30,15 @@ async function sendMessage() {
   input.value = "";
 
   try {
-    const response = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch(`${BACKEND_BASE}/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message,
         channel_id: CHANNEL_ID,
         conversation_id: conversationId,
-        end_user_id: endUserId
-      })
+        end_user_id: endUserId,
+      }),
     });
 
     const data = await response.json();
@@ -48,12 +48,11 @@ async function sendMessage() {
     endUserId = data.end_user_id;
 
     if (!es) {
-      const eventsUrl = `https://${subdomain}.ngrok-free.app/events/${conversationId}`;
-      es = new EventSource(eventsUrl);
+      es = new EventSource(`${BACKEND_BASE}/events/${conversationId}`);
 
       es.onmessage = (e) => {
-        const payload = JSON.parse(e.data);
-        appendMessage("Bot", payload.content.body);
+        const payload = JSON.parse(e.data);          // { author, content }
+        appendMessage("Bot", payload.content.body);  // show the reply text
       };
 
       es.onerror = (err) => console.error("SSE error:", err);
