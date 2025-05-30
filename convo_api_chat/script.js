@@ -21,27 +21,60 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-function ensureSSE() {
+async function ensureSSE() {
   if (es || !conversationId) return;          // already open or no ID yet
 
   const sseUrl = `${BACKEND_BASE}/events/${encodeURIComponent(conversationId)}`;
-  console.log("Opening SSE →", sseUrl);       // debug
+  console.log("Opening stream →", sseUrl);
 
-  es = new EventSource(sseUrl);
+  try {
+    // Make a normal CORS fetch request that keeps the body open.
+    const resp = await fetch(sseUrl, {
+      headers: { Accept: "text/event-stream" },
+      cache  : "no-cache",
+      mode   : "cors"
+    });
+    if (!resp.ok) throw new Error(`Stream HTTP ${resp.status}`);
 
-  es.onopen = () => console.log("SSE connected →", sseUrl);
+    // Keep the response locked in this reader.
+    const reader   = resp.body.getReader();
+    const decoder  = new TextDecoder("utf-8");
+    let   buffer   = "";
 
-  es.onmessage = (e) => {
-    const { author, content } = JSON.parse(e.data);
-    appendMessage(author?.display_name ?? "Bot", content.body);
-  };
+    es = true;                     // mark “stream is open”
+    console.log("SSE connected ✔︎");
 
-  es.onerror = (err) => {
-    console.error("SSE error:", err);
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;             // server closed the stream
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Split on double line-break = end of one SSE event
+      let sep;
+      while ((sep = buffer.indexOf("\n\n")) !== -1) {
+        const raw = buffer.slice(0, sep).trim();
+        buffer    = buffer.slice(sep + 2);
+
+        // Ignore keep-alive comments that start with “:”
+        if (!raw || raw.startsWith(":")) continue;
+
+        // We only ever send one “data:” line per event.
+        const json = raw.replace(/^data:\s*/, "");
+        try {
+          const { author, content } = JSON.parse(json);
+          appendMessage(author?.display_name ?? "Bot", content.body);
+        } catch (err) {
+          console.error("Parse error", err, raw);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Stream error:", err);
     appendMessage("System", "⚠️ Lost connection to server stream.");
-  };
+    es = null;                     // allow a retry on next sendMessage
+  }
 }
-
 
 async function sendMessage() {
   const input = document.getElementById("user-input");
