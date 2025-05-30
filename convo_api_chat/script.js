@@ -21,10 +21,45 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function ensureSSE() {
+  if (es || !conversationId) return;          // already open or no ID yet
+
+  const sseUrl = `${BACKEND_BASE}/events/${encodeURIComponent(conversationId)}`;
+  console.log("Opening SSE →", sseUrl);       // debug
+
+  es = new EventSource(sseUrl);
+
+  es.onopen = () => console.log("SSE connected →", sseUrl);
+
+  es.onmessage = (e) => {
+    const { author, content } = JSON.parse(e.data);
+    appendMessage(author?.display_name ?? "Bot", content.body);
+  };
+
+  es.onerror = (err) => {
+    console.error("SSE error:", err);
+    appendMessage("System", "⚠️ Lost connection to server stream.");
+  };
+}
+
+
 async function sendMessage() {
   const input = document.getElementById("user-input");
   const message = input.value.trim();
   if (!message) return;
+
+  if (!conversationId) {
+    await fetch(`${BACKEND_BASE}/send`, {
+      method : "POST",
+      headers: { "Content-Type": "application/json" },
+      body   : JSON.stringify({ message: "", channel_id: CHANNEL_ID })
+    }).then(r => r.json())
+      .then(d => {
+        conversationId = d.conversation_id?.trim();
+        endUserId      = d.end_user_id?.trim();
+      });
+    ensureSSE();   // open the stream as soon as we have the ID
+  }
 
   appendMessage("You", message);
   input.value = "";
@@ -44,26 +79,11 @@ async function sendMessage() {
     const data = await response.json();
     if (data.error) throw new Error(data.error);
 
-    conversationId = data.conversation_id;
-    endUserId = data.end_user_id;
+    conversationId = data.conversation_id?.trim();
+    endUserId      = data.end_user_id?.trim();
 
-    if (!es) {
-      const sseUrl = `${BACKEND_BASE}/events/${encodeURIComponent(conversationId)}`;
-      es = new EventSource(sseUrl);
+    ensureSSE();          // <<< open the stream now (only once)
 
-      es.onopen = () => console.log("SSE connected →", sseUrl);
-
-      es.onmessage = (e) => {
-        const payload = JSON.parse(e.data);          // { author, content }
-        const sender = payload.author?.display_name ?? "Bot";
-        appendMessage(sender, payload.content.body);
-      };
-
-      es.onerror = (err) => {
-        console.error("SSE error:", err);
-        appendMessage("System", "⚠️ Lost connection to server stream.");
-      };
-    }
   } catch (err) {
     console.error("Proxy error:", err);
     appendMessage("System", "❌ Message failed to send.");
