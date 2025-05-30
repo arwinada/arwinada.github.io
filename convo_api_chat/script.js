@@ -48,7 +48,7 @@ async function sendMessage() {
     endUserId = data.end_user_id;
 
     if (!es) {
-      const sseUrl = `${BACKEND_BASE}/events/${conversationId}`;
+      const sseUrl = `${BACKEND_BASE}/events/${encodeURIComponent(conversationId)}`;
       es = new EventSource(sseUrl);
 
       es.onopen = () => console.log("SSE connected →", sseUrl);
