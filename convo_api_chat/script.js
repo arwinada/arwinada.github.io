@@ -48,17 +48,21 @@ async function sendMessage() {
     endUserId = data.end_user_id;
 
     if (!es) {
-      es = new EventSource(`${BACKEND_BASE}/events/${conversationId}`);
+      const sseUrl = `${BACKEND_BASE}/events/${conversationId}`;
+      es = new EventSource(sseUrl);
 
-      es.onopen = () => console.log("SSE connected →", url);
+      es.onopen = () => console.log("SSE connected →", sseUrl);
 
       es.onmessage = (e) => {
         const payload = JSON.parse(e.data);          // { author, content }
-        appendMessage("Bot", payload.content.body);  // show the reply text
+        const sender = payload.author?.display_name ?? "Bot";
+        appendMessage(sender, payload.content.body);
       };
 
-      es.onerror = (err) => console.error("SSE error:", err);
-      appendMessage("System", "⚠️ Lost connection to server stream.");
+      es.onerror = (err) => {
+        console.error("SSE error:", err);
+        appendMessage("System", "⚠️ Lost connection to server stream.");
+      };
     }
   } catch (err) {
     console.error("Proxy error:", err);
